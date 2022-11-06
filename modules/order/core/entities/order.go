@@ -3,35 +3,41 @@ package mod_order_core_ents
 import (
 	"fmt"
 
-	mod_order_core_vos "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/order/core/value-objects"
+	order_core_evts "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/order/core/events"
+	order_core_vos "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/order/core/value-objects"
 	mod_shared "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/shared"
 )
 
-type OrderBizEntity struct {
-	mod_shared.BaseEntity
+type OrderEntity struct {
+	mod_shared.DomainBaseEntity
 	CustomerId      string
 	ItemId          string
 	InvoiceNumber   string
-	Status          mod_order_core_vos.OrderStatus
+	Status          order_core_vos.OrderStatus
 	TotalQuantity   int
 	TotalOrderValue int
 	ShippingCost    int
 	IsCOD           bool
-	ShippingAddress mod_order_core_vos.ShippingAddress
+	ShippingAddress order_core_vos.ShippingAddress
 }
 
-func NewOrderBizEntity() *OrderBizEntity {
-	return &OrderBizEntity{}
+func NewOrderEntity() *OrderEntity {
+	return &OrderEntity{}
 }
 
-func (ent *OrderBizEntity) UpdateShippingAddress(shippingAddr mod_order_core_vos.ShippingAddress) error {
-	if ent.Status >= mod_order_core_vos.OrderStatus_Dispatched {
-		return fmt.Errorf("cannot update Shipping Address, order has already been dispatched")
+func (ent *OrderEntity) UpdateShippingAddress(shippingAddr order_core_vos.ShippingAddress) (mod_shared.DomainEvent, error) {
+	if ent.Status >= order_core_vos.OrderStatus_Dispatched {
+		return nil, fmt.Errorf("cannot update Shipping Address, order has already been dispatched")
 	}
-	if ent.Status < mod_order_core_vos.OrderStatus_ShippingAddressConfirmed {
-		ent.Status = mod_order_core_vos.OrderStatus_ShippingAddressConfirmed
+	if ent.Status < order_core_vos.OrderStatus_ShippingAddressConfirmed {
+		ent.Status = order_core_vos.OrderStatus_ShippingAddressConfirmed
 	}
 	ent.ShippingAddress = shippingAddr
+	ent.PersistenceStatus = mod_shared.MODIFIED
 
-	return nil
+	event := order_core_evts.NewEvent_OrderShippingAddressUpdated(order_core_evts.OrderShippingAddressUpdated_Attrs{
+		OrderId: &ent.Id,
+	})
+
+	return event, nil
 }

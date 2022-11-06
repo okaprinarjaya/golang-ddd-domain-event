@@ -1,6 +1,8 @@
 package mod_shared
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	NONE     = "NONE"
@@ -9,7 +11,7 @@ const (
 	DELETED  = "DELETED"
 )
 
-type BaseEntity struct {
+type DomainBaseEntity struct {
 	Id                string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
