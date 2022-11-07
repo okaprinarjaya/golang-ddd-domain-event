@@ -5,43 +5,32 @@ import (
 
 	"github.com/asaskevich/EventBus"
 	"github.com/google/uuid"
-	mod_foobar_services "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/foobar/services"
+	mod_foobar_subs "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/foobar/subscribers"
 	mod_order_core_ents "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/order/core/entities"
-	mod_order_core_events "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/order/core/events"
 	mod_order_core_vos "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/order/core/value-objects"
 	mod_shared "gitlab.com/okaprinarjaya.wartek/ddd-domain-event/modules/shared"
 )
 
 func main() {
-	evtSubEvent1Handler := mod_foobar_services.NewOrderShippingAddressUpdatedHandler()
-	//
-	//
-	//
-	evtPub := mod_foobar_services.NewEventPublisher()
-	evtPub.Subscribe(
-		evtSubEvent1Handler,
-		mod_order_core_events.NewEvent_OrderShippingAddressUpdated(mod_order_core_events.OrderShippingAddressUpdated_Attrs{}),
-	)
-	// evtPub.Subscribe(evtSubEvent1Handler, mod_order_core_events.NewEvent_OrderShippingAddressUpdated())
-	// evtPub.Subscribe(evtSubEvent1Handler, mod_order_core_events.NewEvent_OrderShippingAddressUpdated())
-	//
-	//
-	//
+	// Application Bootstraping
+	eventBus := EventBus.New()
+	domainEventPublisher := mod_shared.NewEventPublisher()
 
-	bus := EventBus.New()
-	for eventName, handlers := range evtPub.Events() {
+	mod_foobar_subs.Subscriptions(eventBus, domainEventPublisher)
+
+	for eventName, handlers := range domainEventPublisher.Events() {
 		for _, handler := range handlers {
-			bus.Subscribe(eventName, func(event mod_shared.DomainEvent) {
+			eventBus.Subscribe(eventName, func(event mod_shared.DomainEvent) {
 				handler.Notify(event)
 			})
 		}
 	}
 
-	// bus.Subscribe("main.calculator", calculator)
-	// bus.Publish("main.calculator", 20, 49)
-	// bus.Unsubscribe("main.calculator", calculator)
-	// bus.Unsubscribe("event.order.shipping_address_updated", func() {
-	// })
+	//
+	//
+	//
+
+	// Any Testing
 
 	// Test Order core domain
 	order := mod_order_core_ents.NewOrderEntity()
@@ -77,10 +66,6 @@ func main() {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("Trying to notify")
-		bus.Publish(event.Name(), event)
+		eventBus.Publish(event.Name(), event)
 	}
 }
-
-// func calculator(a int, b int) {
-// 	fmt.Printf("%d\n", a+b)
-// }
