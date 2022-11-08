@@ -16,12 +16,12 @@ import (
 
 type StockItemReservationTestSuite struct {
 	suite.Suite
-	StockItem ents.StockItemEntity
+	StockItem *ents.StockItemEntity
 	UserBy    string
 }
 
-func (suite *StockItemReservationTestSuite) SetupTest() {
-	suite.StockItem = *ents.NewStockItemEntity()
+func (suite *StockItemReservationTestSuite) SetupSuite() {
+	suite.StockItem = ents.NewStockItemEntity()
 	suite.StockItem.Id = "stock-item-001"
 	suite.StockItem.CreatedAt = time.Now()
 	suite.StockItem.CreatedBy = "SYSTEM"
@@ -40,11 +40,36 @@ func (suite *StockItemReservationTestSuite) SetupTest() {
 }
 
 // Reservasi stock item sebanyak "1" dengan nomer: "ORDER-001"
-func (suite *StockItemReservationTestSuite) TestReserveStockItem_Order001_Amount1_Success() {
+func (suite *StockItemReservationTestSuite) TestReserveStockItem_A_Order001_Amount1_Success() {
 	suite.StockItem.ReserveStockItem(1, suite.UserBy)
 
 	suite.Nil(suite.StockItem.LatestCommittedStockItem)
 	suite.Equal(1, suite.StockItem.ReservedUnconfirmedQty)
+	suite.Equal(0, suite.StockItem.ReservedConfirmedQty)
+	suite.Equal(10, suite.StockItem.OnHandQty)
+	suite.Equal(9, suite.StockItem.AvailableQty)
+}
+
+// Reservasi stock item sebanyak "2" dengan nomer: "ORDER-002"
+func (suite *StockItemReservationTestSuite) TestReserveStockItem_B_Order002_Amount2_Success() {
+	suite.StockItem.ReserveStockItem(2, suite.UserBy)
+
+	suite.Nil(suite.StockItem.LatestCommittedStockItem)
+	suite.Equal(3, suite.StockItem.ReservedUnconfirmedQty)
+	suite.Equal(0, suite.StockItem.ReservedConfirmedQty)
+	suite.Equal(10, suite.StockItem.OnHandQty)
+	suite.Equal(7, suite.StockItem.AvailableQty)
+}
+
+// Reservasi stock item sebanyak "2" dengan nomer: "ORDER-003"
+func (suite *StockItemReservationTestSuite) TestReserveStockItem_C_Order003_Amount2_Success() {
+	suite.StockItem.ReserveStockItem(2, suite.UserBy)
+
+	suite.Nil(suite.StockItem.LatestCommittedStockItem)
+	suite.Equal(5, suite.StockItem.ReservedUnconfirmedQty)
+	suite.Equal(0, suite.StockItem.ReservedConfirmedQty)
+	suite.Equal(10, suite.StockItem.OnHandQty)
+	suite.Equal(5, suite.StockItem.AvailableQty)
 }
 
 func TestStockItemReservationTestSuite(t *testing.T) {
